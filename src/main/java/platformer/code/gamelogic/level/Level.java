@@ -1,5 +1,7 @@
 package platformer.code.gamelogic.level;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +37,7 @@ public class Level {
 
 	private ArrayList<Enemy> enemiesList = new ArrayList<>();
 	private ArrayList<Flower> flowers = new ArrayList<>();
+	private ArrayList<Water> waters = new ArrayList<>();
 
 	private List<PlayerDieListener> dieListeners = new ArrayList<>();
 	private List<PlayerWinListener> winListeners = new ArrayList<>();
@@ -45,6 +48,8 @@ public class Level {
 	private int tileSize;
 	private Tileset tileset;
 	public static float GRAVITY = 70;
+	private long waterTimer=0;
+	private long timeAmount=5;
 
 	public Level(LevelData leveldata) {
 		this.leveldata = leveldata;
@@ -118,6 +123,8 @@ public class Level {
 					tiles[x][y] = new Water(xPosition, yPosition, tileSize, tileset.getImage("Half_water"), this, 2);
 				else if (values[x][y] == 21)
 					tiles[x][y] = new Water(xPosition, yPosition, tileSize, tileset.getImage("Quarter_water"), this, 1);
+				else if(values[x][y]==22)
+					tiles[x][y] = new SolidTile(xPosition, yPosition, tileSize, tileset.getImage("Face"), this);
 			}
 
 		}
@@ -169,16 +176,31 @@ public class Level {
 				if (flowers.get(i).getHitbox().isIntersecting(player.getHitbox())) {
 					if(flowers.get(i).getType() == 1)
 						water(flowers.get(i).getCol(), flowers.get(i).getRow(), map, 3);
-					// else
-					// 	addGas(flowers.get(i).getCol(), flowers.get(i).getRow(), map, 20, new ArrayList<Gas>());
+					else {
+						addGas(flowers.get(i).getCol(), flowers.get(i).getRow(), map, 20, new ArrayList<Gas>());
+					}
 					flowers.remove(i);
 					i--;
 				}
 			}
+		}
+	}
 			//Adds gas tiles until the requisite number of squares are filled or there is no more room 
-			// private void addGas(int col, int row, Map map, int numSquaresToFill, ArrayList<Gas> placedThisRound) {
+			 private void addGas(int col, int row, Map map, int numSquaresToFill, ArrayList<Gas> placedThisRound) {
+			 	Gas g = new Gas (0, 0, tileSize, tileset.getImage("GasOne"), this, 0);
+				map.addTile(col, row, g);
+				placedThisRound.add(g);
+				numSquaresToFill--;
+
+				int [][] dir = {{-1,0}, {-1,1},{-1,-1},{0, 1},{0,-1}, {1,0}, {1,1}, {1,-1}};
+				int index=0;
+				while (index<placedThisRound.size()&&numSquaresToFill>0) {
+					Gas curr=placedThisRound.get(index);
+					int currentCol=curr.getCol();
+					int currentRow=curr.getRow();
+				}
 				
-			// }
+			 
      
 
 			// Update the enemies
@@ -195,7 +217,6 @@ public class Level {
 			// Update the camera
 			camera.update(tslf);
 		}
-	}
 	
 	
 	//#############################################################################################################
@@ -219,9 +240,24 @@ public class Level {
 		if(fullness==0) {
 			map.addTile(col, row, falWater);
 		}
+		for (int i = 0; i < waters.size(); i++) {
+				if (waters.get(i).getHitbox().isIntersecting(player.getHitbox())) {
+					if (waterTimer==0) {
+						waterTimer=System.currentTimeMillis();
+					}
+					else {
+						if((System.currentTimeMillis()-waterTimer)/1000>=timeAmount) {
+							//what happens when you run out of time
+							waterTimer=0;
+						}
+					}
+				}
 		
 		if (row+1<map.getTiles()[0].length && !(map.getTiles()[col][row+1] instanceof Water)&& !map.getTiles()[col][row+1].isSolid()) {
 			water(col, row+1, map, 2);
+		}
+		if (row+1<map.getTiles()[0].length && !(map.getTiles()[col][row-1] instanceof Water)&& !map.getTiles()[col][row+1].isSolid()) {
+			water(col, row+1, map, 0);
 		}
 		else{
 			//right
@@ -232,7 +268,9 @@ public class Level {
 			if(col-1 >= 0 && !(map.getTiles()[col-1][row] instanceof Water)&& !map.getTiles()[col-1][row].isSolid()) {
 				water(col-1, row, map, 1);
 			}
+			waters.add(falWater);
 		}
+	}
 		
 	}
 
@@ -276,6 +314,9 @@ public class Level {
 	   			 if (camera.isVisibleOnCamera(tile.getX(), tile.getY(), tile.getSize(), tile.getSize()))
 	   				 tile.draw(g);
 	   		 }
+			 g.setColor(Color.RED);
+			 g.setFont(new Font("Arial", Font.BOLD, 40));
+			 g.drawString(((System.currentTimeMillis()-waterTimer)/1000)+"", (int)player.getX(), (int)player.getY()-20);
 	   	 }
 
 
