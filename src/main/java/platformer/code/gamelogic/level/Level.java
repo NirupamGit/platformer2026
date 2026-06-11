@@ -198,6 +198,18 @@ public class Level {
 					Gas curr=placedThisRound.get(index);
 					int currentCol=curr.getCol();
 					int currentRow=curr.getRow();
+					for (int i=0; i<dir.length; i++){
+						//are we in bounds?
+						//are we already gas?
+						//are we not solid?
+						if(currentCol+dir[i][1]>=0 && currentCol+dir[i][1]<map.getTiles().length && currentRow+dir[i][1]>=0 
+						&& currentRow+dir[i][1]<map.getTiles()[0].length && !map.getTiles()[currentCol+dir[i][1]][currentRow+dir[i][0]].isSolid()
+						&& map.getTiles()[currentCol+dir[i][1]][currentRow+dir[i][0]] instanceof Gas) {
+
+						}
+
+					}
+
 				}
 				
 			 
@@ -248,6 +260,7 @@ public class Level {
 					else {
 						if((System.currentTimeMillis()-waterTimer)/1000>=timeAmount) {
 							//what happens when you run out of time
+						
 							waterTimer=0;
 						}
 					}
